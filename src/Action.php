@@ -31,7 +31,7 @@ class Action extends Protocol\Action{
         
         // 校验是否可以执行接受动作
         Util\Condition::checkAcceptCondition($this->flow);
-
+        app('point')->point('流程接受');
         // 跳转到指定步骤
         Util\Step::accept($this->flow);  
     }
@@ -82,6 +82,7 @@ class Action extends Protocol\Action{
             Util\Step::addHooks("after_step", $this->flow, $step, ZYD_STEP_APPLY, ZYD_STEP_APPLY, Util\Status::NOTPUBLISH);
             return $flow;
         }
+        app('point')->point('流程保存');
         return false;
     }
     
@@ -141,6 +142,7 @@ class Action extends Protocol\Action{
      * 通过
      */
     public function next() {
+        app('point')->point('流程通过');
         $this->turnTo('nextto', Util\Status::NEXT);
     }
 
@@ -155,6 +157,7 @@ class Action extends Protocol\Action{
      * 拒绝
      */
     public function reject() {
+        app('point')->point('流程拒绝');
         $this->turnTo('rejectto', Util\Status::REJECT);
     }
 
@@ -213,7 +216,7 @@ class Action extends Protocol\Action{
         Util\Condition::checkTransitionCondition(
                 $this->flow
         );
-        
+        app('point')->point('流程流转');
         // 流转
         Util\Step::turnTo(
                 $this->flow,
