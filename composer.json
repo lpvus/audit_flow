@@ -1,5 +1,5 @@
 {
-  "name": "pvol/flowmatrix",
+  "name": "bj_web_dev/zyd_flowmatrix",
   "description": "基于laravel的树形多分支流程流转引擎.",
   "type": "library",
   "keywords": [
