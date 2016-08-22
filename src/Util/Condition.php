@@ -144,7 +144,7 @@ class Condition {
         $flow_info = $flow_mod->getAttributes();
 
         $accepted_users = explode(",", $flow_info['accepted_users']);
-        if (!in_array($user->name, $accepted_users)) {
+        if (!in_array($user->name, $accepted_users) && !empty($user->name)) {
             throw new Exception("当前用户不在执行列表中！");
         }
 
