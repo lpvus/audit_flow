@@ -282,7 +282,7 @@ class Step
             $accepted_uids = explode(",", $flow_info['accepted_uids']);
             // 去除当前执行人
             $accepted_uids_reverse = array_flip($accepted_uids);
-            unset($accepted_uids_reverse[$user->name]);
+            unset($accepted_uids_reverse[$user->id]);
             $accepted_uids = array_flip($accepted_uids_reverse);
             $accepted_uids = implode(',', $accepted_uids);
         }
@@ -314,7 +314,7 @@ class Step
             'step' => $flow->running_step,
             'status' => Status::OVER,
             'created_uid' => $user->id,
-            'created_user' => $user->name,
+            'created_user' => $user->id,
             'created_role' => $flow->running_role,
         ));
         
