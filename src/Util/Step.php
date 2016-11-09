@@ -17,7 +17,7 @@ class Step
      *  
      */
     public static function getHistoryUser($project_name, $flow_id, $role) {
-        $sql = "select created_user,created_role from flow_steps where "
+        $sql = "select created_user,created_role,created_uid from flow_steps where "
                 . "project_name='{$project_name}' "
                 . "and flow_id='{$flow_id}' "
                 . "and created_role='{$role}' "
@@ -54,6 +54,14 @@ class Step
         }
         $new_accepted_users[] = $user->name;
         $new_accepted_users = implode(',', $new_accepted_users);
+        // 合并接受人uids
+        $new_accepted_uids = array();
+        if(!empty($flow_info['accepted_uids'])){
+            $new_accepted_uids = explode(",", $flow_info['accepted_uids']);
+        }
+        $new_accepted_uids[] = $user->id;
+        $new_accepted_uids = implode(',', $new_accepted_uids);
+
         // 合并角色
         $new_accepted_roles = array();
         if(!empty($flow_info['accepted_roles'])){
@@ -64,7 +72,8 @@ class Step
         $flow_mod->update(array(
             'current_status' => Status::ACCEPT,
             'accepted_users' => $new_accepted_users,
-            'accepted_roles' => $new_accepted_roles
+            'accepted_roles' => $new_accepted_roles,
+            'accepted_uids'  => $new_accepted_uids
         ));
         $step = Model\Step::create(array(
             'project_name' => $flow->tpl_name,
@@ -76,6 +85,7 @@ class Step
             'step' => $flow->running_step,
             'status' => Status::ACCEPT,
             'created_user' => $user->name,
+            'created_uid' => $user->id,
             'created_role' => $flow->running_role,
         ));
         // 添加hook
@@ -88,7 +98,7 @@ class Step
      * @param flow lib/flow类
      * 
      */
-    public static function dispatch($flow, $accepted_user, $accepted_role) {
+    public static function dispatch($flow, $accepted_user, $accepted_role,$accepted_uids) {
         
         $user = User::info();
         
@@ -99,6 +109,7 @@ class Step
             'current_status' => Status::ACCEPT,
             'accepted_users' => $accepted_user,
             'accepted_roles' => $accepted_role,
+            'accepted_uids'  => $accepted_uids
         ));
         $step = Model\Step::create(array(
             'project_name' => $flow->tpl_name,
@@ -110,6 +121,7 @@ class Step
             'step' => $flow->running_step,
             'status' => Status::DISPATCH,
             'created_user' => $user->name,
+            'created_uid' => $user->id,
             'created_role' => $flow->running_role,
         ));
         // 添加hook
@@ -144,11 +156,13 @@ class Step
             case 'accept-only': // 始终先接受后执行
                 $to_status = Status::ARRIVED;
                 $to_accepted_users = '';
+                $to_accepted_uids = '';
                 $to_accepted_roles = '';
                 break;
             case 'history': // 从历史记录中找执行人
                 $to_status = Status::ACCEPT;
                 $to_accepted_users = $history_user['created_user'];
+                $to_accepted_uids = $history_user['created_uid'];
                 $to_accepted_roles = $to_config['roles'][0];  // 单角色可以这样使用，多角色后续再行考虑，当前需求无此要求
                 break;
             case 'accept': 
@@ -156,15 +170,17 @@ class Step
                 if(!empty($history_user)){
                     $to_status = Status::ACCEPT;
                     $to_accepted_users = $history_user['created_user'];
+                    $to_accepted_uids = $history_user['created_uid'];
                     $to_accepted_roles = $to_config['roles'][0];  // 单角色可以这样使用，多角色后续再行考虑，当前需求无此要求
                 } else {
                     $to_status = Status::ARRIVED;
                     $to_accepted_users = '';
                     $to_accepted_roles = '';
+                    $to_accepted_uids = '';
                 }
                 break;
         }
-        Log::info("accepted_users:" . $to_accepted_users . " accepted_roles:" . $to_accepted_roles);
+        Log::info('单号:'.$flow->flow_id."accepted_users:" . $to_accepted_users . " accepted_roles:" . $to_accepted_roles);
         // 如果之前已经有执行人
         if(!empty($flow_info['accepted_users'])){
             $from_accepted_users = explode(",", $flow_info['accepted_users']);
@@ -173,10 +189,12 @@ class Step
             unset($from_accepted_users_reverse[$user->name]);
             $from_accepted_users = array_flip($from_accepted_users_reverse);
             // 添加跳转到的步骤执行人
-            if(!empty($to_accepted_users)){
+            if(!empty($to_accepted_users) && !empty($to_accepted_uids)){
                 $from_accepted_users[] = $to_accepted_users;
+                $from_accepted_uids[] = $to_accepted_uids;
             }
             $to_accepted_users = implode(',', $from_accepted_users);
+            $to_accepted_uids = implode(',', $from_accepted_uids);
         }
         
         // 如果之前已经有执行人
@@ -195,12 +213,12 @@ class Step
         
         $content = Arr::get($flow->request, 'content');
         $real_content = Arr::get($flow->request, 'real_content');
-        
         // 更新流程主表
         $flow_mod->update(array(
             'current_step' => $to,
             'current_status' => $to_status,
             'accepted_users' => $to_accepted_users,
+            'accepted_uids' => $to_accepted_uids,
             'accepted_roles' => $to_accepted_roles
         ));
 
@@ -210,7 +228,7 @@ class Step
         }
         $data_json = empty($data) ? '' : json_encode($data);
         $data_json = urldecode($data_json);
-        
+
         // 新增步骤执行记录
         $step = Model\Step::create(array(
             'project_name' => $flow->tpl_name,
@@ -223,6 +241,7 @@ class Step
             'status' => $action_status,
             'data' => $data_json,
             'created_user' => $user->name,
+            'created_uid' => $user->name,
             'created_role' => $flow->running_role,
         ));
         
@@ -257,6 +276,16 @@ class Step
             $accepted_users = array_flip($accepted_users_reverse);
             $accepted_users = implode(',', $accepted_users);
         }
+
+        // 如果之前已经有执行人
+        if(!empty($flow_info['accepted_uids'])){
+            $accepted_uids = explode(",", $flow_info['accepted_uids']);
+            // 去除当前执行人
+            $accepted_uids_reverse = array_flip($accepted_uids);
+            unset($accepted_uids_reverse[$user->name]);
+            $accepted_uids = array_flip($accepted_uids_reverse);
+            $accepted_uids = implode(',', $accepted_uids);
+        }
         
         // 如果之前已经有执行人
         if(!empty($flow_info['accepted_roles'])){
@@ -272,6 +301,7 @@ class Step
 
         $flow_mod->update(array(
             'accepted_users' => $accepted_users,
+            'accepted_uids' => $accepted_uids,
             'accepted_roles' => $accepted_roles
         ));
         $step = Model\Step::create(array(
@@ -283,6 +313,7 @@ class Step
             'real_content' => $real_content,
             'step' => $flow->running_step,
             'status' => Status::OVER,
+            'created_uid' => $user->id,
             'created_user' => $user->name,
             'created_role' => $flow->running_role,
         ));

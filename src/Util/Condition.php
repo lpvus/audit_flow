@@ -57,7 +57,10 @@ class Condition {
         
         $user = User::info();
 
-        if($user->name !== $flow_info['created_user']){
+        /*if($user->name !== $flow_info['created_user']){
+            throw new Exception("流程已接受！");
+        }*/
+        if($user->id !== $flow_info['created_uid']){
             throw new Exception("流程已接受！");
         }
         return true;
@@ -78,8 +81,12 @@ class Condition {
         $flow_info = $flow_mod->getAttributes();
         
         $user = User::info();
-        $accepted_users = explode(",", $flow_info['accepted_users']);
+        /*$accepted_users = explode(",", $flow_info['accepted_users']);
         if(in_array($user->name, $accepted_users)){
+            throw new Exception("流程已接受！");
+        }*/
+        $accepted_uids = explode(",", $flow_info['accepted_uids']);
+        if(in_array($user->id, $accepted_uids)){
             throw new Exception("流程已接受！");
         }
         
@@ -143,11 +150,14 @@ class Condition {
         }
         $flow_info = $flow_mod->getAttributes();
 
-        $accepted_users = explode(",", $flow_info['accepted_users']);
+        /*$accepted_users = explode(",", $flow_info['accepted_users']);
         if (!in_array($user->name, $accepted_users) && !empty($user->name)) {
             throw new Exception("当前用户不在执行列表中！");
+        }*/
+        $accepted_uids = explode(",", $flow_info['accepted_uids']);
+        if (!in_array($user->id, $accepted_uids) && !empty($user->id)) {
+            throw new Exception("当前用户不在执行列表中！");
         }
-
         return true;
     }
 

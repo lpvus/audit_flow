@@ -28,10 +28,16 @@ class Delay {
             throw new Exception("流程id不存在");
         }
         $flow_attr = $flow->getAttributes();
-        $accepted_users = explode(",", $flow_attr['accepted_users']);
+        /*$accepted_users = explode(",", $flow_attr['accepted_users']);
         // 判断用户是否是当前流程的接收人
         if(in_array($user->name, $accepted_users)){
             return true;     
+        }*/
+
+        $accepted_uids = explode(",", $flow_attr['accepted_uids']);
+        // 判断用户是否是当前流程的接收人
+        if(in_array($user->id, $accepted_uids)){
+            return true;
         }
         // 判断用户有没有要执行的角色
         $current_roles = $user->roleNames();
@@ -74,6 +80,7 @@ class Delay {
             'step' => $flow_attr['current_step'],
             'status' => Util\Status::DELAY,
             'created_user' => $user->name,
+            'created_uid' => $user->id,
             'created_role' => $flow->running_role,
         ));
         Model\Step::find($last_step)->update([
