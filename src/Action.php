@@ -39,13 +39,13 @@ class Action extends Protocol\Action{
     /** 
      * 流程分配
      */
-    public function dispatch($accepted_user, $accepted_role) {
+    public function dispatch($accepted_user, $accepted_role,$accepted_uids) {
         
         // 校验是否可以执行分配动作
         Util\Condition::checkDispatchCondition($this->flow, $accepted_user, $accepted_role);
         
         // 跳转到指定步骤
-        Util\Step::dispatch($this->flow, $accepted_user, $accepted_role);  
+        Util\Step::dispatch($this->flow, $accepted_user, $accepted_role,$accepted_uids);
         
     }
 
@@ -62,6 +62,7 @@ class Action extends Protocol\Action{
                         'accepted_roles' => '',
                         'current_step' => 'apply',
                         'created_user' => $user->name,
+                        'created_uid' => $user->id
             ));
             $this->flow->flow_id = $flow->id;
             $steps = Config::get('flow.' . $this->flow->tpl_name . '.steps');
@@ -78,6 +79,7 @@ class Action extends Protocol\Action{
                 'status' => Util\Status::NOTPUBLISH,
                 'created_user' => $user->name,
                 'created_role' => $this->flow->running_role,
+                'created_uid' => $user->id
             ));
             Util\Step::addHooks("after_step", $this->flow, $step, ZYD_STEP_APPLY, ZYD_STEP_APPLY, Util\Status::NOTPUBLISH);
             return $flow;
@@ -124,6 +126,7 @@ class Action extends Protocol\Action{
             'step' => $current_key,
             'status' => Util\Status::CREATE,
             'created_user' => $user->name,
+            'created_uid' => $user->id,
             'created_role' => $this->flow->running_role,
         ));
         // 添加hook
