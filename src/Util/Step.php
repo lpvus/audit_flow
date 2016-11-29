@@ -241,7 +241,7 @@ class Step
             'status' => $action_status,
             'data' => $data_json,
             'created_user' => $user->name,
-            'created_uid' => $user->name,
+            'created_uid' => $user->id,
             'created_role' => $flow->running_role,
         ));
         
@@ -314,7 +314,7 @@ class Step
             'step' => $flow->running_step,
             'status' => Status::OVER,
             'created_uid' => $user->id,
-            'created_user' => $user->id,
+            'created_user' => $user->name,
             'created_role' => $flow->running_role,
         ));
         
