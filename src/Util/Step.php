@@ -16,12 +16,12 @@ class Step
      * @param role 角色
      *  
      */
-    public static function getHistoryUser($project_name, $flow_id, $role) {
+    public static function getHistoryUser($project_name, $flow_id, $role) {//取同一角色最新的处理人
         $sql = "select created_user,created_role,created_uid from flow_steps where "
                 . "project_name='{$project_name}' "
                 . "and flow_id='{$flow_id}' "
                 . "and created_role='{$role}' "
-                . "and deleted_at is null "
+                . "and deleted_at is null order by id desc "
                         . "limit 1";
         $list = DB::select($sql);
         $row = (array)$list[0];
