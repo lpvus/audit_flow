@@ -109,7 +109,8 @@ class Action extends Protocol\Action{
                 $this->flow
         );
         $now = date('Y-m-d H:i:s');
-        $yzt_fileno = strtoupper($this->flow->tpl_name) . date("Ymd", strtotime($now)) . str_pad($this->flow->flow_id, 3, 0, STR_PAD_LEFT);
+        $tpl_name = $this->flow->tpl_name == PROJECT_ZYD ? Config::get('yzt.config.file_num_start') : strtoupper($this->flow->tpl_name);
+        $yzt_fileno = $tpl_name . date("Ymd", strtotime($now)) . str_pad($this->flow->flow_id, 3, 0, STR_PAD_LEFT);
         Model\Flow::where('id', $this->flow->flow_id)->update(array(
                     'current_status' => Util\Status::ARRIVED,
                     'current_step' => $next_key,
