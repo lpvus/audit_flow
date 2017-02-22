@@ -24,7 +24,7 @@ class Step
                 . "and deleted_at is null order by id desc "
                         . "limit 1";
         $list = DB::select($sql);
-        $row = (array)$list[0];
+        $row = !empty($list) ? (array)$list[0] : [];
         
         return $row;
     }
@@ -189,6 +189,7 @@ class Step
             unset($from_accepted_users_reverse[$user->name]);
             $from_accepted_users = array_flip($from_accepted_users_reverse);
             // 添加跳转到的步骤执行人
+            $from_accepted_uids = [];
             if(!empty($to_accepted_users) && !empty($to_accepted_uids)){
                 $from_accepted_users[] = $to_accepted_users;
                 $from_accepted_uids[] = $to_accepted_uids;
@@ -223,8 +224,10 @@ class Step
         ));
 
         $data = Arr::get($flow->request, 'data');
-        foreach($data as &$item){
-            $item = urlencode($item);
+        if (!empty($data)) {
+            foreach ($data as &$item) {
+                $item = urlencode($item);
+            }
         }
         $data_json = empty($data) ? '' : json_encode($data);
         $data_json = urldecode($data_json);
