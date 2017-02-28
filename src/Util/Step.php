@@ -124,6 +124,24 @@ class Step
             'created_uid' => $user->id,
             'created_role' => $flow->running_role,
         ));
+
+        // 记录分配后下次操作人,避免流程跳转后找不到已分配的操作人
+        if ($step) {
+            $next_step = Model\Flow::where('id', $flow->flow_id)->pluck('current_step');
+            Model\Step::create(array(
+                'project_name' => $flow->tpl_name,
+                'flow_id' => $flow->flow_id,
+                'title' => $steps[$next_step]['title'],
+                'real_title' => $steps[$next_step]['title'],
+                'content' => '待处理人:' . $accepted_user,
+                'real_content' => '待处理人:' . $accepted_user,
+                'step' => $next_step,
+                'status' => Status::NEXT,
+                'created_user' => $accepted_user,
+                'created_uid' => $accepted_uids,
+                'created_role' => $accepted_role,
+            ));
+        }
         // 添加hook
         self::addHooks("after_step", $flow, $step, $flow->running_step, $flow->running_step, Status::DISPATCH);
     }
