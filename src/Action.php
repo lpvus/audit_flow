@@ -130,6 +130,7 @@ class Action extends Protocol\Action{
             'created_role' => $this->flow->running_role,
         ));
         // 添加hook
+        // 多产品发布后下一个流程需要优化
         Util\Step::addHooks("after_step", $this->flow, $step, ZYD_STEP_APPLY, ZYD_STEP_SERVICE_VERIFY, Util\Status::CREATE);
         
         return $flow;

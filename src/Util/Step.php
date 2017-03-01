@@ -349,7 +349,7 @@ class Step
             foreach ($hooks[$position] as $hook) {
                 if(is_subclass_of($hook, "Pvol\FlowMatrix\Protocol\Hook\AfterStep")){
                     try{
-                        $hook::factory()->action($flow->flow_id, $step->id, $from, $to, $action_status);
+                        $hook::factory(array())->action($flow->flow_id, $step->id, $from, $to, $action_status);
                     }catch(Exception $e){
                         Log::info($e);
                     }
