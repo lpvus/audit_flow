@@ -136,7 +136,7 @@ class Step
                 'content' => '待处理人:' . $accepted_user,
                 'real_content' => '待处理人:' . $accepted_user,
                 'step' => $next_step,
-                'status' => Status::NEXT,
+                'status' => Status::ARRIVED,
                 'created_user' => $accepted_user,
                 'created_uid' => $accepted_uids,
                 'created_role' => $accepted_role,
